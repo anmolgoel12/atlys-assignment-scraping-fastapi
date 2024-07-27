@@ -1,6 +1,7 @@
 from typing import List
 import requests as _requests
 import bs4 as _bs4
+from requests.adapters import HTTPAdapter, Retry
 
 
 class DentalStallScrapper:
@@ -8,12 +9,29 @@ class DentalStallScrapper:
     limit = None
 
     def _get_soup_from_url(self, url: str) -> _bs4.BeautifulSoup:
-        page = _requests.get(url)
+        session = _requests.Session()
+        retry = Retry(
+            total=3,  # Total number of retries
+            backoff_factor=5,  # Delay between retries is backoff_factor * (2 ** (retry_count - 1))
+            status_forcelist=[
+                500,
+                502,
+                503,
+                504,
+                400,
+                404,
+            ],  # Retry on these status codes
+            allowed_methods=["GET"],  # Retry only GET requests
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        page = session.get(url)
         soup = _bs4.BeautifulSoup(page.content, "html.parser")
         return soup
 
     def _parse_soup_product_details(self, soup: _bs4.BeautifulSoup):
-        products = []
+        products = {}
         product_list = soup.select("li.product.type-product")
         for product in product_list:
             image = (product.select("div.mf-product-thumbnail")[0]).find("img")[
@@ -34,27 +52,26 @@ class DentalStallScrapper:
                 .find("bdi")
                 .text.strip()
             )
-            products.append(
-                {
-                    "id": id,
-                    "name": name,
-                    "price": price,
-                    "image": image,
-                }
-            )
+            products[id] = {
+                "id": id,
+                "name": name,
+                "price": price,
+                "image": image,
+            }
+
         return products
 
     def scrape_products(self, limit=1):
-        products = []
+        products = {}
         product_url = "/shop"
         page1_products = self._get_soup_from_url(f"{self.base_url}{product_url}")
         products_list = self._parse_soup_product_details(page1_products)
-        products += products_list
+        products = {**products, **products_list}
         for page in range(2, limit + 1):
             products_soup = self._get_soup_from_url(
                 f"{self.base_url}{product_url}/page/{page}/"
             )
             products_list = self._parse_soup_product_details(products_soup)
-            products += products_list
+            products = {**products, **products_list}
             pass
         return products

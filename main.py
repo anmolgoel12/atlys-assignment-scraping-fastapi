@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query
 
 from services.scraper import DentalStallScrapper
+from storage.file import FileStorage
 
 app = FastAPI()
 
@@ -8,4 +9,10 @@ app = FastAPI()
 @app.get("/test")
 async def root(limit: int = Query(default=1)):
     scrape_service = DentalStallScrapper()
-    return scrape_service.scrape_products(limit=limit)
+    data = scrape_service.scrape_products(limit=limit)
+    db = FileStorage("data")
+    count = db.set_data(data)
+    return {
+        "message": f"Scrapping successfull: Total product scrapped are {count['total']} out of which {count['added']} no of new products added and {count['updated']} no of product price was updated.",
+        "status": 1,
+    }
