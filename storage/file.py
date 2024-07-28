@@ -2,6 +2,7 @@ import os, json
 
 from fastapi import HTTPException
 from pathlib import Path
+from cache.inmemory import custom_cache
 
 ROOT_DIrectory = Path(__file__).resolve().parent.parent
 
@@ -17,12 +18,14 @@ class FileStorage:
     def _dump_data_in_file(self, data):
 
         # Open the file and load the JSON data
-        products = {}
+        ## getting product from cache
+        products = custom_cache.get_data("products")
+
         file_path = f"{self.path}/products.json"
         count = {"total": 0, "added": 0, "updated": 0}
 
-        with open(file_path, "r") as file:
-            products = json.load(file)
+        # with open(file_path, "r") as file:
+        #     products = json.load(file)
 
         for product in data:
             if (
@@ -37,6 +40,8 @@ class FileStorage:
             count["total"] += 1
         with open(file_path, "w") as file:
             data = json.dump(products, file)
+        ## updating cache value
+        custom_cache.set_data("products", products)
         return count
 
     def get_product_by_Id(self, id):

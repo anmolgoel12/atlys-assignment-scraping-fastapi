@@ -3,3 +3,4 @@ fastapi
 beautifulsoup4
 uvicorn
 pydantic
+pydantic-settings
