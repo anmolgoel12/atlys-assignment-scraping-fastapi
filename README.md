@@ -9,3 +9,12 @@
     - `set_data` function set the value for a key
     - `get_data` function returns the cached value for a key
     - `remove_key` function deletes the key from cache
+- Bearer Authentication Added, static token can be handled from config->settings.py having `Settings` class or from .env file
+
+## Output from API
+```json
+{
+  "message": "Scrapping successfull: Total product scrapped are 24 out of which 0 no of new products added and 0 no of product price was updated.",
+  "status": 1
+}
+```
