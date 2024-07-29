@@ -46,18 +46,20 @@ class DentalStallScrapper:
             id = (product.find("div", class_="addtocart-buynow-btn")).find("a")[
                 "data-product_id"
             ]
-
-            price = (
-                (product.find("span", class_="woocommerce-Price-amount amount"))
-                .find("bdi")
-                .text.strip()
-            )
-            products[id] = {
-                "id": id,
-                "name": name,
-                "price": price,
-                "image": image,
-            }
+            price_div = product.find("span", class_="woocommerce-Price-amount amount")
+            price = -1
+            if price_div:
+                price = (
+                    (product.find("span", class_="woocommerce-Price-amount amount"))
+                    .find("bdi")
+                    .text.strip()
+                )
+                products[id] = {
+                    "id": id,
+                    "name": name,
+                    "price": price,
+                    "image": image,
+                }
 
         return products
 
